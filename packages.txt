@@ -1,3 +1,5 @@
 libpq-dev
 libjpeg-dev
 zlib1g-dev
+build-essential 
+swig 
