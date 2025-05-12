@@ -79,7 +79,6 @@ def get_answer():
             # 调用API
             response = client.chat.completions.create(
                 model=GEMINI_MODEL,
-                reasoning_effort= REASONING_EFFORT,
                 messages=api_messages if enhanced_prompt else st.session_state.messages_history,
                 temperature=st.session_state.temperature,
                 stream=True)
