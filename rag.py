@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-import faiss
+from sklearn.neighbors import NearestNeighbors  # 纯Python实现，易于安装
 from openai import OpenAI
 from config import GEMINI_API_KEY, GEMINI_BASE_URL, GEMINI_EMBEDDING_DIM, GEMINI_EMBEDDING_MODEL
 
@@ -10,8 +10,8 @@ class RAGManager:
         # 如果没有提供API客户端，创建Gemini客户端
         if api_client is None:
             self.client = OpenAI(
-                api_key= GEMINI_API_KEY,  # 替换为您的实际Gemini API密钥
-                base_url= GEMINI_BASE_URL
+                api_key=GEMINI_API_KEY,
+                base_url=GEMINI_BASE_URL
             )
         else:
             self.client = api_client
@@ -20,8 +20,9 @@ class RAGManager:
         self.documents = []
         self.document_metadata = []
         self.vector_index = None
+        self.embeddings_array = None  # 存储嵌入向量
         self.enabled = False
-        self.embedding_dim = GEMINI_EMBEDDING_DIM  # Gemini text-embedding-004模型的维度，可能需要调整
+        self.embedding_dim = GEMINI_EMBEDDING_DIM  # Gemini嵌入模型的维度
         self.embedding_model = GEMINI_EMBEDDING_MODEL  # Gemini的嵌入模型
 
     def add_document(self, text, metadata):
@@ -60,6 +61,7 @@ class RAGManager:
     def _build_index(self):
         if not self.documents:
             self.vector_index = None
+            self.embeddings_array = None
             return
 
         # 生成文档向量
@@ -69,12 +71,13 @@ class RAGManager:
             embedding = self._get_embedding(doc_text)
             embeddings.append(embedding)
 
-        embeddings_array = np.array(embeddings).astype('float32')
+        self.embeddings_array = np.array(embeddings).astype('float32')
 
-        # 创建FAISS索引
-        self.vector_index = faiss.IndexFlatL2(self.embedding_dim)
-        # 添加向量到索引
-        self.vector_index.add(embeddings_array)
+        # 使用scikit-learn的NearestNeighbors替代FAISS
+        self.vector_index = NearestNeighbors(n_neighbors=min(5, len(self.documents)), 
+                                             algorithm='brute', 
+                                             metric='euclidean')
+        self.vector_index.fit(self.embeddings_array)
 
     def search(self, query, top_k=3):
         if not self.vector_index or not self.enabled:
@@ -83,8 +86,13 @@ class RAGManager:
         # 编码查询
         query_vector = np.array([self._get_embedding(query)]).astype('float32')
 
+        # 限制返回结果数量不超过文档总数
+        actual_k = min(top_k, len(self.documents))
+        if actual_k == 0:
+            return []
+            
         # 搜索最近的向量
-        distances, indices = self.vector_index.search(query_vector, top_k)
+        distances, indices = self.vector_index.kneighbors(query_vector, n_neighbors=actual_k)
 
         results = []
         for i, idx in enumerate(indices[0]):
@@ -103,13 +111,16 @@ class RAGManager:
         self.documents = []
         self.document_metadata = []
         self.vector_index = None
+        self.embeddings_array = None
 
     def is_empty(self):
         return len(self.documents) == 0
 
 
+# 其余函数保持不变
 def get_enhanced_prompt(user_query, search_results):
     """根据RAG搜索结果创建增强提示"""
+    # 保持原始实现不变
     if not search_results:
         return None
 
