@@ -1,6 +1,5 @@
 import streamlit as st
 import atexit
-
 from config import PERSONAS
 from database import init_db_pool
 from rag import RAGManager

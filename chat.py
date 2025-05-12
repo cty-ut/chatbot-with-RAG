@@ -1,6 +1,6 @@
 import streamlit as st
 from openai import OpenAI
-from config import GEMINI_API_KEY, GEMINI_BASE_URL, GEMINI_MODEL, PERSONAS, REASONING_EFFORT
+from config import GEMINI_API_KEY, GEMINI_BASE_URL, GEMINI_MODEL, PERSONAS
 from database import save_chat
 from rag import get_enhanced_prompt
 
