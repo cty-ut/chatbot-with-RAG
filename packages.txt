@@ -1,6 +1,0 @@
-build-essential
-cmake
-libblas-dev
-liblapack-dev
-libopenblas-dev
-swig
