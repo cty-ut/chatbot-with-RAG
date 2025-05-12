@@ -1,5 +1,6 @@
-libpq-dev
-libjpeg-dev
-zlib1g-dev
-build-essential 
-swig 
+build-essential
+cmake
+libblas-dev
+liblapack-dev
+libopenblas-dev
+swig
