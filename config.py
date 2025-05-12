@@ -4,7 +4,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-GEMINI_API_KEY = st.secrets.get("OPENAI_API_KEY", "")
+
+GEMINI_API_KEY = st.secrets["OPENAI_API_KEY"]
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 GEMINI_MODEL = "gemini-2.5-flash-preview-04-17"
 REASONING_EFFORT = "high"
@@ -13,12 +14,12 @@ GEMINI_EMBEDDING_MODEL = "text-embedding-004"
 GEMINI_EMBEDDING_DIM = 768
 
 DB_CONFIG = {
-        "host": st.secrets.get("DB_HOST", os.getenv("DB_HOST", "")),
-        "user": st.secrets.get("DB_USER", os.getenv("DB_USER", "")),
-        "password": st.secrets.get("DB_PASSWORD", os.getenv("DB_PASSWORD", "")),
-        "database": st.secrets.get("DB_NAME", os.getenv("DB_NAME", "")),
-        "port": int(st.secrets.get("DB_PORT", os.getenv("DB_PORT", "5432")))
-    }
+    "host": st.secrets["DB_HOST"],
+    "user": st.secrets["DB_USER"],
+    "password": st.secrets["DB_PASSWORD"],
+    "database": st.secrets["DB_NAME"],
+    "port": int(st.secrets["DB_PORT"])
+}
 
 # AI角色配置
 PERSONAS = {
