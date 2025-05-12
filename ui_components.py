@@ -14,7 +14,7 @@ def render_sidebar():
         # 居中图片
         st.markdown("""
         <center>
-        <img src='https://vip.helloimg.com/i/2024/07/02/66841f6f4a3a5.png' width='120'/>
+        <img src='https://i.imgur.com/Qv2SO8o.png' width='120'/>
         </center>
         """, unsafe_allow_html=True)
 
