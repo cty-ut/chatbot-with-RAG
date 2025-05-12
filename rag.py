@@ -7,7 +7,6 @@ from config import GEMINI_API_KEY, GEMINI_BASE_URL, GEMINI_EMBEDDING_DIM, GEMINI
 
 class RAGManager:
     def __init__(self, api_client=None):
-        # 如果没有提供API客户端，创建Gemini客户端
         if api_client is None:
             self.client = OpenAI(
                 api_key=GEMINI_API_KEY,

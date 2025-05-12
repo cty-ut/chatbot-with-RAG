@@ -24,7 +24,7 @@ def render_sidebar():
 
         - 📌 **Features**: Multi-conversation, RAG knowledge base, Templates, AI personas
 
-        - 🚀 **Technology**: OpenAI API + Streamlit + FAISS
+        - 🚀 **Technology**: GEMINI API + Streamlit
         """)
 
         # 添加一些间距
