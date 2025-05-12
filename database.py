@@ -1,6 +1,6 @@
 import streamlit as st
-import mysql.connector
-from mysql.connector import pooling
+import psycopg2
+from psycopg2 import pool
 from config import DB_CONFIG
 
 
@@ -9,10 +9,14 @@ def init_db_pool():
     if 'db_connection_pool' not in st.session_state:
         try:
             # 初始化连接池
-            pool = mysql.connector.pooling.MySQLConnectionPool(
-                pool_name="chatbot_pool",
-                pool_size=5,  # 连接池大小，可根据需求调整
-                **DB_CONFIG
+            pool = psycopg2.pool.SimpleConnectionPool(
+                minconn=1,
+                maxconn=5,
+                host=DB_CONFIG["host"],
+                port=DB_CONFIG["port"],
+                dbname=DB_CONFIG["database"],
+                user=DB_CONFIG["user"],
+                password=DB_CONFIG["password"]
             )
             st.session_state.db_connection_pool = pool
             print("Database connection pool initialized successfully")
@@ -22,7 +26,7 @@ def init_db_pool():
             st.session_state.db_connection_pool = None
 
 
-# 连接到MySQL - 使用连接池
+# 连接到PostgreSQL - 使用连接池
 def connect_db():
     # 确保连接池已初始化
     if 'db_connection_pool' not in st.session_state:
@@ -31,12 +35,18 @@ def connect_db():
     # 如果连接池存在，从池中获取连接
     if st.session_state.db_connection_pool:
         try:
-            return st.session_state.db_connection_pool.get_connection()
+            return st.session_state.db_connection_pool.getconn()
         except Exception as e:
             print(f"Error getting connection from pool: {e}")
 
     # 原始连接方法作为后备
-    return mysql.connector.connect(**DB_CONFIG)
+    return psycopg2.connect(
+        host=DB_CONFIG["host"],
+        port=DB_CONFIG["port"],
+        dbname=DB_CONFIG["database"],
+        user=DB_CONFIG["user"],
+        password=DB_CONFIG["password"]
+    )
 
 
 # 保存聊天功能，支持会话
@@ -63,13 +73,14 @@ def save_chat(role, content, conversation_id=None):
         db_conn.commit()
         return True
     except Exception as e:
+        db_conn.rollback()
         print(f"Failed to save chat: {e}")
         return False
     finally:
         if cursor:
             cursor.close()
-        if db_conn.is_connected():
-            db_conn.close()
+        if db_conn and not db_conn.closed:
+            st.session_state.db_connection_pool.putconn(db_conn)
 
 
 # 获取聊天记录
@@ -87,8 +98,8 @@ def get_chat_history():
     finally:
         if cursor:
             cursor.close()
-        if db_conn.is_connected():
-            db_conn.close()
+        if db_conn and not db_conn.closed:
+            st.session_state.db_connection_pool.putconn(db_conn)
 
 
 # 会话管理功能
@@ -98,19 +109,20 @@ def create_conversation(title="New Conversation"):
     cursor = None
     try:
         cursor = db_conn.cursor()
-        sql = "INSERT INTO conversations (title) VALUES (%s)"
+        sql = "INSERT INTO conversations (title) VALUES (%s) RETURNING id"
         cursor.execute(sql, (title,))
-        conversation_id = cursor.lastrowid
+        conversation_id = cursor.fetchone()[0]
         db_conn.commit()
         return conversation_id
     except Exception as e:
+        db_conn.rollback()
         print(f"Failed to create conversation: {e}")
         return None
     finally:
         if cursor:
             cursor.close()
-        if db_conn.is_connected():
-            db_conn.close()
+        if db_conn and not db_conn.closed:
+            st.session_state.db_connection_pool.putconn(db_conn)
 
 
 def get_conversations():
@@ -131,8 +143,8 @@ def get_conversations():
     finally:
         if cursor:
             cursor.close()
-        if db_conn.is_connected():
-            db_conn.close()
+        if db_conn and not db_conn.closed:
+            st.session_state.db_connection_pool.putconn(db_conn)
 
 
 def get_conversation_messages(conversation_id):
@@ -154,8 +166,8 @@ def get_conversation_messages(conversation_id):
     finally:
         if cursor:
             cursor.close()
-        if db_conn.is_connected():
-            db_conn.close()
+        if db_conn and not db_conn.closed:
+            st.session_state.db_connection_pool.putconn(db_conn)
 
 
 def update_conversation_title(conversation_id, new_title):
@@ -172,13 +184,14 @@ def update_conversation_title(conversation_id, new_title):
         db_conn.commit()
         return True
     except Exception as e:
+        db_conn.rollback()
         print(f"Failed to update conversation title: {e}")
         return False
     finally:
         if cursor:
             cursor.close()
-        if db_conn.is_connected():
-            db_conn.close()
+        if db_conn and not db_conn.closed:
+            st.session_state.db_connection_pool.putconn(db_conn)
 
 
 def delete_conversation(conversation_id):
@@ -192,10 +205,52 @@ def delete_conversation(conversation_id):
         db_conn.commit()
         return True
     except Exception as e:
+        db_conn.rollback()
         print(f"Failed to delete conversation: {e}")
         return False
     finally:
         if cursor:
             cursor.close()
-        if db_conn.is_connected():
-            db_conn.close()
+        if db_conn and not db_conn.closed:
+            st.session_state.db_connection_pool.putconn(db_conn)
+
+
+# 创建数据库表
+def create_tables():
+    """创建必要的数据库表"""
+    db_conn = connect_db()
+    cursor = None
+    try:
+        cursor = db_conn.cursor()
+        
+        # 创建会话表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS conversations (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # 创建聊天历史表
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_history (
+                id SERIAL PRIMARY KEY,
+                role VARCHAR(50) NOT NULL,
+                content TEXT NOT NULL,
+                conversation_id INTEGER REFERENCES conversations(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        db_conn.commit()
+        print("Database tables created successfully")
+    except Exception as e:
+        db_conn.rollback()
+        print(f"Failed to create tables: {e}")
+    finally:
+        if cursor:
+            cursor.close()
+        if db_conn and not db_conn.closed:
+            st.session_state.db_connection_pool.putconn(db_conn)
