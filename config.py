@@ -6,8 +6,8 @@ import streamlit as st
 
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-GEMINI_MODEL = "gemini-2.5-pro-exp-03-25"
-GEMINI_PICTURE_MODEL = "gemini-2.5-pro-exp-03-25"
+GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_PICTURE_MODEL = "gemini-2.0-flash"
 GEMINI_EMBEDDING_MODEL = "text-embedding-004"
 GEMINI_EMBEDDING_DIM = 768
 
