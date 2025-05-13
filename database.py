@@ -84,27 +84,24 @@ def save_chat(role, content, conversation_id=None):
 
 
 # 会话管理功能
-def create_conversation(title="New Conversation"):
-    """创建一个新会话并返回会话ID"""
+def create_conversation(title):
     db_conn = connect_db()
-    cursor = None
+    cursor = db_conn.cursor()
     try:
-        cursor = db_conn.cursor()
-        sql = "INSERT INTO conversations (title) VALUES (%s) RETURNING id"
-        cursor.execute(sql, (title,))
-        conversation_id = cursor.fetchone()[0]
+        # 使用RETURNING子句获取新插入的ID
+        cursor.execute(
+            "INSERT INTO conversations (title, created_at, updated_at) VALUES (%s, NOW(), NOW()) RETURNING id",
+            (title,)
+        )
+        new_id = cursor.fetchone()[0]  # 使用fetchone获取返回的ID
         db_conn.commit()
-        return conversation_id
+        return new_id
     except Exception as e:
-        db_conn.rollback()
-        print(f"Failed to create conversation: {e}")
+        print(f"Error creating conversation: {e}")
         return None
     finally:
-        if cursor:
-            cursor.close()
-        if db_conn and not db_conn.closed:
-            st.session_state.db_connection_pool.putconn(db_conn)
-
+        cursor.close()
+        db_conn.close()
 
 def get_conversations():
     """获取所有会话列表"""
