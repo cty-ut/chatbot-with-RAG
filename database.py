@@ -83,25 +83,6 @@ def save_chat(role, content, conversation_id=None):
             st.session_state.db_connection_pool.putconn(db_conn)
 
 
-# 获取聊天记录
-def get_chat_history():
-    db_conn = connect_db()
-    cursor = None
-    try:
-        cursor = db_conn.cursor()
-        cursor.execute("SELECT role, content FROM chat_history ORDER BY id DESC LIMIT 10")
-        chats = cursor.fetchall()
-        return chats[::-1]  # 反转以正确顺序显示
-    except Exception as e:
-        print(f"Failed to get chat history: {e}")
-        return []
-    finally:
-        if cursor:
-            cursor.close()
-        if db_conn and not db_conn.closed:
-            st.session_state.db_connection_pool.putconn(db_conn)
-
-
 # 会话管理功能
 def create_conversation(title="New Conversation"):
     """创建一个新会话并返回会话ID"""
@@ -147,27 +128,7 @@ def get_conversations():
             st.session_state.db_connection_pool.putconn(db_conn)
 
 
-def get_conversation_messages(conversation_id):
-    """从特定会话获取所有消息"""
-    db_conn = connect_db()
-    cursor = None
-    try:
-        cursor = db_conn.cursor()
-        cursor.execute("""
-            SELECT role, content 
-            FROM chat_history 
-            WHERE conversation_id = %s 
-            ORDER BY id
-        """, (conversation_id,))
-        return cursor.fetchall()
-    except Exception as e:
-        print(f"Failed to get conversation messages: {e}")
-        return []
-    finally:
-        if cursor:
-            cursor.close()
-        if db_conn and not db_conn.closed:
-            st.session_state.db_connection_pool.putconn(db_conn)
+
 
 
 def update_conversation_title(conversation_id, new_title):
