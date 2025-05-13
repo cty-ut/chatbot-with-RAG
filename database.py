@@ -204,3 +204,44 @@ def create_tables():
             cursor.close()
         if db_conn and not db_conn.closed:
             st.session_state.db_connection_pool.putconn(db_conn)
+            
+def get_conversation_messages(conversation_id=None):
+    """获取指定会话ID的所有消息"""
+    if conversation_id is None and "current_conversation_id" in st.session_state:
+        conversation_id = st.session_state.current_conversation_id
+    
+    if not conversation_id:
+        return []  # 如果没有会话ID，返回空列表
+    
+    messages = []
+    
+    try:
+        db_conn = connect_db()
+        cursor = db_conn.cursor()
+        
+        # 使用参数化查询防止SQL注入
+        cursor.execute(
+            "SELECT role, content FROM chat_history WHERE conversation_id = %s ORDER BY timestamp ASC",
+            (conversation_id,)
+        )
+        
+        messages = cursor.fetchall()  # 获取所有结果
+        
+    except Exception as e:
+        st.error(f"获取会话消息失败: {e}")
+        # 将错误记录到日志
+        print(f"Error in get_conversation_messages: {e}")
+    finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'db_conn' in locals() and db_conn:
+            try:
+                # 如果使用的是SimpleConnectionPool
+                if hasattr(st.session_state, 'db_connection_pool'):
+                    st.session_state.db_connection_pool.putconn(db_conn)
+                else:
+                    db_conn.close()
+            except Exception as e:
+                print(f"Error closing connection: {e}")
+    
+    return messages
