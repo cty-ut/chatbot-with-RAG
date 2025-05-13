@@ -31,7 +31,7 @@ def process_image_file(file_obj, file_extension):
 
         # 显示上传的图像
         image_obj = Image.open(temp_image_path)
-        st.image(image_obj, caption="Uploaded Image", use_container_width=True)
+        st.image(image_obj, caption="Uploaded Image", width=600)
 
         # 将图像编码为base64
         with open(temp_image_path, "rb") as image_file:
