@@ -76,7 +76,7 @@ def render_conversations_tab():
 
     # 新建会话表单
     with st.form(key="new_conversation_form", clear_on_submit=True):
-        st.text_input("Title", value="New Conversation", max_chars=50, key="new_conv_title")
+        st.text_input("Title", placeholder="New Conversation", max_chars=50, key="new_conv_title")
         submit_button = st.form_submit_button("Create", use_container_width=True)
 
         if submit_button:
@@ -128,17 +128,18 @@ def render_conversations_tab():
                     if conv_id == st.session_state.current_conversation_id:
                         remaining_convs = [c for c in conversations_list_ui if c[0] != conv_id]
                         if remaining_convs:
-                            st.session_state.current_conversation_id = remaining_convs[0][0]
+                            # 获取新的会话ID
+                            new_conv_id = remaining_convs[0][0]
+                            # 使用switch_conversation函数正确加载会话内容
+                            switch_conversation(new_conv_id)
                         else:
                             # 如果没有剩余会话，则创建一个新会话
                             new_id_default = create_conversation("Default Conversation")
-                            st.session_state.current_conversation_id = new_id_default
-
-                        # 重置消息
-                        st.session_state.messages = []
-                        st.session_state.messages_history = [{"role": "system", "content": get_system_prompt()}]
-
+                            # 正确加载新创建的会话
+                            switch_conversation(new_id_default)
+        
                     st.rerun()
+
 
             # 如果需要，显示编辑表单
             if "editing_conversation" in st.session_state and st.session_state.editing_conversation == conv_id:
