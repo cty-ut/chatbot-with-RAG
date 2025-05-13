@@ -6,24 +6,16 @@ from config import DB_CONFIG
 
 # 创建数据库连接池
 def init_db_pool():
-    if 'db_connection_pool' not in st.session_state:
-        try:
-            # 初始化连接池
-            pool = psycopg2.pool.SimpleConnectionPool(
-                minconn=1,
-                maxconn=5,
-                host=DB_CONFIG["host"],
-                port=DB_CONFIG["port"],
-                dbname=DB_CONFIG["database"],
-                user=DB_CONFIG["user"],
-                password=DB_CONFIG["password"]
-            )
-            st.session_state.db_connection_pool = pool
-            print("Database connection pool initialized successfully")
-        except Exception as e:
-            print(f"Error initializing connection pool: {e}")
-            # 如果连接池初始化失败，回退到原始连接方法
-            st.session_state.db_connection_pool = None
+    from psycopg2 import pool
+    
+    st.session_state.db_connection_pool = pool.SimpleConnectionPool(
+        1, 10,  # min, max connections
+        host=st.secrets["DB_HOST"],
+        user=st.secrets["DB_USER"],
+        password=st.secrets["DB_PASSWORD"],
+        database=st.secrets["DB_NAME"],
+        port=int(st.secrets["DB_PORT"])
+    )
 
 
 # 连接到PostgreSQL - 使用连接池
