@@ -89,6 +89,8 @@ def render_conversations_tab():
                     st.session_state.messages = []
                     st.session_state.messages_history = [{"role": "system", "content": get_system_prompt()}]
                     st.rerun()
+                else:
+                    st.error("Failed to create conversation. Check console logs for details.")
 
     # 会话列表
     conversations_list_ui = get_conversations()
