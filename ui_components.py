@@ -291,8 +291,13 @@ def render_settings_tab():
         finally:
             if cursor_clear:
                 cursor_clear.close()
-            if db_conn_clear.is_connected():
-                db_conn_clear.close()
+            if db_conn_clear:
+                if db_conn_clear and not getattr(db_conn_clear, 'closed', True):
+                    # 如果使用连接池
+                    if hasattr(st.session_state, 'db_connection_pool'):
+                        st.session_state.db_connection_pool.putconn(db_conn_clear)
+                    else:
+                        db_conn_clear.close()
 
         # 重置会话状态
         st.session_state.messages = [{
