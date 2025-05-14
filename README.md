@@ -2,7 +2,7 @@
 
 An advanced multi-functional chatbot built with Streamlit and Google Gemini API, featuring RAG (Retrieval-Augmented Generation) knowledge base enhancement, multi-modal file processing, and conversation management.
 
-![C-bot](https://i.imgur.com/Qv2SO8o.png)
+## 🤖 C-bot
 
 ## ✨ Features
 
