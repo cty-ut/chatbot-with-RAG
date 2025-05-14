@@ -1,8 +1,10 @@
-# C-bot: AI Chatbot
+# 🤖 C-bot: AI Chatbot
 
 An advanced multi-functional chatbot built with Streamlit and Google Gemini API, featuring RAG (Retrieval-Augmented Generation) knowledge base enhancement, multi-modal file processing, and conversation management.
 
-## 🤖 C-bot
+## 🔗 [Live Demo](https://chatbot-with-rag-j5kyqjupptewxu2ze9k6qc.streamlit.app/)
+
+Try the live demo: [https://chatbot-with-rag-j5kyqjupptewxu2ze9k6qc.streamlit.app/](https://chatbot-with-rag-j5kyqjupptewxu2ze9k6qc.streamlit.app/)
 
 ## ✨ Features
 
