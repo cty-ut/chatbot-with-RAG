@@ -99,6 +99,81 @@ CREATE TABLE chat_history (
 );
 ```
 
+### Exporting Chat History
+
+You can export chat history from the database using several methods:
+
+#### 1. Using psql Command Line
+
+```bash
+# Export all conversations and chat history to CSV
+psql -h your_db_host -U your_username -d your_database -c "COPY (SELECT c.id, c.title, c.created_at, ch.role, ch.content, ch.timestamp FROM conversations c JOIN chat_history ch ON c.id = ch.conversation_id ORDER BY c.id, ch.timestamp) TO '/path/to/export.csv' WITH CSV HEADER;"
+
+# Export a specific conversation
+psql -h your_db_host -U your_username -d your_database -c "COPY (SELECT ch.role, ch.content, ch.timestamp FROM chat_history ch WHERE ch.conversation_id = 1 ORDER BY ch.timestamp) TO '/path/to/conversation_1.csv' WITH CSV HEADER;"
+```
+
+#### 2. Using pgAdmin
+
+1. Open pgAdmin and connect to your database
+2. Right-click on your database and select "Query Tool"
+3. Run a query to select the data you want to export:
+   ```sql
+   SELECT c.id, c.title, ch.role, ch.content, ch.timestamp 
+   FROM conversations c 
+   JOIN chat_history ch ON c.id = ch.conversation_id 
+   ORDER BY c.id, ch.timestamp;
+   ```
+4. Select the results, right-click, and choose "Save Results As" to export to CSV
+
+#### 3. Using Python Script
+
+Create a script to export your chat history:
+
+```python
+import psycopg2
+import pandas as pd
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Database connection parameters
+db_params = {
+    "host": os.environ.get("DB_HOST"),
+    "user": os.environ.get("DB_USER"),
+    "password": os.environ.get("DB_PASSWORD"),
+    "database": os.environ.get("DB_NAME"),
+    "port": int(os.environ.get("DB_PORT", "5432"))
+}
+
+# Connect to the database
+conn = psycopg2.connect(**db_params)
+
+# Export all conversations
+query = """
+SELECT c.id, c.title, c.created_at, ch.role, ch.content, ch.timestamp 
+FROM conversations c 
+JOIN chat_history ch ON c.id = ch.conversation_id 
+ORDER BY c.id, ch.timestamp
+"""
+
+# Read the data into a pandas DataFrame
+df = pd.read_sql_query(query, conn)
+
+# Export to CSV
+df.to_csv("chat_history_export.csv", index=False)
+
+# Export to Excel
+df.to_excel("chat_history_export.xlsx", index=False)
+
+print(f"Exported {len(df)} chat messages")
+
+# Close the connection
+conn.close()
+```
+
 ## 📦 Dependencies
 
 - streamlit
